@@ -48,10 +48,11 @@ const (
 	MFI_CMD_PD_SCSI_IO = 0x04
 	MFI_CMD_DCMD       = 0x05
 
-	MR_DCMD_CTRL_GET_INFO  = 0x01010000
-	MR_DCMD_PD_GET_LIST    = 0x02010000 // Obsolete / deprecated command
-	MR_DCMD_PD_LIST_QUERY  = 0x02010100
-	MR_DCMD_CTRL_EVENT_GET = 0x01040300
+	MR_DCMD_CTRL_GET_INFO       = 0x01010000
+	MR_DCMD_PD_GET_LIST         = 0x02010000 // Obsolete / deprecated command
+	MR_DCMD_PD_LIST_QUERY       = 0x02010100
+	MR_DCMD_CTRL_EVENT_GET_INFO = 0x01040100
+	MR_DCMD_CTRL_EVENT_GET      = 0x01040300
 
 	MFI_FRAME_DIR_NONE  = 0x0000
 	MFI_FRAME_DIR_WRITE = 0x0008
@@ -300,9 +301,9 @@ func (m *MegasasIoctl) GetPDList(host uint16) ([]MegasasPDAddress, error) {
 }
 
 func (m *MegasasIoctl) GetCtrlEvent(host uint16) error {
-	respBuf := make([]byte, 4096)
+	respBuf := make([]byte, 32767)
 	log.Println("EVENT_GET begin")
-	if err := m.MFI(host, MR_DCMD_CTRL_EVENT_GET, respBuf); err != nil {
+	if err := m.MFI(host, MR_DCMD_CTRL_EVENT_GET_INFO, respBuf); err != nil {
 		log.Println(err)
 		return err
 	}
