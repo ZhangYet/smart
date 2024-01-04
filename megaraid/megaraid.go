@@ -211,6 +211,9 @@ func (m *MegasasIoctl) MFI(host uint16, opcode uint32, b []byte) error {
 	dcmd.opcode = opcode
 	dcmd.data_xfer_len = uint32(len(b))
 	dcmd.sge_count = 1
+	if opcode == MR_DCMD_CTRL_EVENT_GET {
+		dcmd.flags = MFI_FRAME_DIR_READ
+	}
 
 	ioc.sge_count = 1
 	ioc.sgl_off = uint32(unsafe.Offsetof(dcmd.sgl))
@@ -287,7 +290,7 @@ func (m *MegasasIoctl) GetCtrlEvent(host uint16) error {
 		log.Println(err)
 		return err
 	}
-	log.Println(fmt.Sprintf("EVENT_GET result: %s", string(respBuf)))
+	log.Println(fmt.Sprintf("EVENT_GET result: %s\n", string(respBuf)))
 	return nil
 }
 
