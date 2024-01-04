@@ -226,7 +226,23 @@ func (m *MegasasIoctl) MFI(host uint16, opcode uint32, b []byte) error {
 		return err
 	}
 
+	if opcode == MR_DCMD_CTRL_EVENT_GET {
+		for i, iov := range ioc.sgl {
+			log.Printf("Parsing %dth ioc\n", i)
+			printIov(iov)
+		}
+	}
 	return nil
+}
+
+func printIov(iov Iovec) {
+	ptr := uintptr(iov.Base)
+	for i := uint64(0); i < iov.Len; i++ {
+		curr := unsafe.Pointer(ptr)
+		v := *(*byte)(curr)
+		fmt.Print(v)
+		ptr += unsafe.Sizeof(v)
+	}
 }
 
 // PassThru sends a SCSI command to a MegaRAID controller
@@ -285,12 +301,14 @@ func (m *MegasasIoctl) GetPDList(host uint16) ([]MegasasPDAddress, error) {
 
 func (m *MegasasIoctl) GetCtrlEvent(host uint16) error {
 	respBuf := make([]byte, 4096)
-
+	log.Println("EVENT_GET begin")
 	if err := m.MFI(host, MR_DCMD_CTRL_EVENT_GET, respBuf); err != nil {
 		log.Println(err)
 		return err
 	}
+
 	log.Println(fmt.Sprintf("EVENT_GET result: %s\n", string(respBuf)))
+	log.Println("EVENT_GET end")
 	return nil
 }
 
