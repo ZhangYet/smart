@@ -215,6 +215,12 @@ func (m *MegasasIoctl) MFI(host uint16, opcode uint32, b []byte) error {
 	if opcode == MR_DCMD_CTRL_EVENT_GET {
 		dcmd.flags = MFI_FRAME_DIR_READ
 		dcmd.cmd_status = 0xff
+		// 3, 126, 0, 0, 255, 255, 0, 255, 0, 0, 0, 0
+		dcmd.mbox[0] = 3
+		dcmd.mbox[1] = 126
+		dcmd.mbox[4] = 255
+		dcmd.mbox[5] = 255
+		dcmd.mbox[7] = 255
 	}
 
 	ioc.sge_count = 1
