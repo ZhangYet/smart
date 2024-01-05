@@ -245,6 +245,7 @@ func printIov(iov Iovec) {
 		fmt.Print(v)
 		ptr += unsafe.Sizeof(v)
 	}
+	fmt.Print('\n')
 }
 
 // PassThru sends a SCSI command to a MegaRAID controller
@@ -302,7 +303,7 @@ func (m *MegasasIoctl) GetPDList(host uint16) ([]MegasasPDAddress, error) {
 }
 
 func (m *MegasasIoctl) GetCtrlEvent(host uint16) error {
-	respBuf := make([]byte, 32767)
+	respBuf := make([]byte, 32776)
 	log.Println("EVENT_GET begin")
 	if err := m.MFI(host, MR_DCMD_CTRL_EVENT_GET, respBuf); err != nil {
 		log.Println(err)
