@@ -212,7 +212,7 @@ func (m *MegasasIoctl) MFI(host uint16, opcode uint32, b []byte) error {
 	dcmd.opcode = opcode
 	dcmd.data_xfer_len = uint32(len(b))
 	dcmd.sge_count = 1
-	if opcode == MR_DCMD_CTRL_EVENT_GET {
+	if opcode == MR_DCMD_CTRL_EVENT_GET || opcode == MR_DCMD_CTRL_GET_INFO {
 		dcmd.flags = MFI_FRAME_DIR_READ
 		dcmd.cmd_status = 0xff
 		dcmd.mbox[0] = 1
@@ -229,12 +229,6 @@ func (m *MegasasIoctl) MFI(host uint16, opcode uint32, b []byte) error {
 		return err
 	}
 
-	if opcode == MR_DCMD_CTRL_EVENT_GET {
-		for i, iov := range ioc.sgl {
-			log.Printf("Parsing %dth ioc\n", i)
-			printIov(iov)
-		}
-	}
 	return nil
 }
 
@@ -301,6 +295,19 @@ func (m *MegasasIoctl) GetPDList(host uint16) ([]MegasasPDAddress, error) {
 	binary.Read(bytes.NewBuffer(respBuf[8:]), utils.NativeEndian, &devices)
 
 	return devices, nil
+}
+
+func (m *MegasasIoctl) GetCtrlInfo(host uint16) error {
+	respBuf := make([]byte, 4096)
+	log.Println("GET_CTRL_INFO begin")
+	if err := m.MFI(host, MR_DCMD_CTRL_EVENT_GET, respBuf); err != nil {
+		log.Println(err)
+		return err
+	}
+
+	log.Println(fmt.Sprintf("GET_CTRL_INFO result: %s\n", string(respBuf)))
+	log.Println("GET_CTRL_INFO end")
+	return nil
 }
 
 func (m *MegasasIoctl) GetCtrlEvent(host uint16) error {
@@ -420,6 +427,7 @@ func OpenMegasasIoctl(host uint16, diskNum uint8) error {
 	fmt.Printf("Firmware Revision: %s\n", ident_buf.FirmwareRevision())
 	fmt.Printf("Model Number: %s\n", ident_buf.ModelNumber())
 
+	_ = m.GetCtrlInfo(host)
 	_ = m.GetCtrlEvent(host)
 
 	db, err := drivedb.OpenDriveDb("drivedb.yaml")
