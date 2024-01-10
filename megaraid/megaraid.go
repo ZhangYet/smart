@@ -66,6 +66,14 @@ type megasas_sge64 struct {
 	_padding  uint32
 }
 
+type MegasasEvtLogInfo struct {
+	newest_seq_num   uint32
+	oldest_seq_num   uint32
+	clear_seq_num    uint32
+	shutdown_seq_num uint32
+	boot_seq_num     uint32
+}
+
 type Iovec struct {
 	Base uint64 // FIXME: This is not portable to 32-bit platforms!
 	Len  uint64
@@ -297,15 +305,20 @@ func (m *MegasasIoctl) GetPDList(host uint16) ([]MegasasPDAddress, error) {
 	return devices, nil
 }
 
-func (m *MegasasIoctl) GetCtrlInfo(host uint16) error {
+func (m *MegasasIoctl) GetEventInfo(host uint16) error {
 	respBuf := make([]byte, 4096)
 	log.Println("GET_CTRL_INFO begin")
-	if err := m.MFI(host, MR_DCMD_CTRL_GET_INFO, respBuf); err != nil {
+	if err := m.MFI(host, MR_DCMD_CTRL_EVENT_GET_INFO, respBuf); err != nil {
 		log.Println(err)
 		return err
 	}
+	respCount := utils.NativeEndian.Uint32(respBuf[4:])
+	logInfo := make([]MegasasEvtLogInfo, respCount)
+	binary.Read(bytes.NewBuffer(respBuf[8:]), utils.NativeEndian, &logInfo)
+	for _, info := range logInfo {
+		log.Println(fmt.Sprintf("seq_num: %d", info.newest_seq_num))
+	}
 
-	log.Println(fmt.Sprintf("GET_CTRL_INFO result: %s\n", string(respBuf)))
 	log.Println("GET_CTRL_INFO end")
 	return nil
 }
@@ -427,7 +440,7 @@ func OpenMegasasIoctl(host uint16, diskNum uint8) error {
 	fmt.Printf("Firmware Revision: %s\n", ident_buf.FirmwareRevision())
 	fmt.Printf("Model Number: %s\n", ident_buf.ModelNumber())
 
-	_ = m.GetCtrlInfo(host)
+	_ = m.GetEventInfo(host)
 	_ = m.GetCtrlEvent(host)
 
 	db, err := drivedb.OpenDriveDb("drivedb.yaml")
