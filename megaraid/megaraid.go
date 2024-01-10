@@ -300,7 +300,7 @@ func (m *MegasasIoctl) GetPDList(host uint16) ([]MegasasPDAddress, error) {
 func (m *MegasasIoctl) GetCtrlInfo(host uint16) error {
 	respBuf := make([]byte, 4096)
 	log.Println("GET_CTRL_INFO begin")
-	if err := m.MFI(host, MR_DCMD_CTRL_EVENT_GET, respBuf); err != nil {
+	if err := m.MFI(host, MR_DCMD_CTRL_GET_INFO, respBuf); err != nil {
 		log.Println(err)
 		return err
 	}
