@@ -312,12 +312,11 @@ func (m *MegasasIoctl) GetEventInfo(host uint16) error {
 		log.Println(err)
 		return err
 	}
-	respCount := utils.NativeEndian.Uint32(respBuf[4:])
-	logInfo := make([]MegasasEvtLogInfo, respCount)
+
+	logInfo := MegasasEvtLogInfo{}
 	binary.Read(bytes.NewBuffer(respBuf[8:]), utils.NativeEndian, &logInfo)
-	for _, info := range logInfo {
-		log.Println(fmt.Sprintf("seq_num: %d", info.newest_seq_num))
-	}
+
+	log.Println(fmt.Sprintf("seq_num: %d", logInfo.newest_seq_num))
 
 	log.Println("GET_CTRL_INFO end")
 	return nil
